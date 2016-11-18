@@ -1,6 +1,7 @@
 # /usr/bin/env python
 
 import itertools
+import array
 import numpy as np
 import time
 import sys
@@ -18,10 +19,16 @@ def load_data(filename="data/reddit-comments-2015-08.csv", vocabulary_size=2000,
     # Read the data
     print("Reading file...")
     with open(filename, 'rt') as f:
-        ascii_buf = f.read().encode('ascii', 'ignore')
+        ascii_buf = array.array('B',f.read().encode('ascii', 'ignore'))
         # Filter sentences
-        X_train = [ascii_buf[i:i+CHUNK_SIZE] for i in range(0, len(ascii_buf)-1, CHUNK_SIZE)]
-        y_train = [ascii_buf[i:i+CHUNK_SIZE] for i in range(1, len(ascii_buf), CHUNK_SIZE)]
+        X_train = np.asarray([
+                      np.asarray(ascii_buf[i:i+CHUNK_SIZE], dtype=np.int8)
+                      for i in range(0, len(ascii_buf)-1, CHUNK_SIZE)
+                  ])
+        y_train = np.asarray([
+                      np.asarray(ascii_buf[i:i+CHUNK_SIZE], dtype=np.int8)
+                      for i in range(1, len(ascii_buf), CHUNK_SIZE)
+                  ])
 
     print("Parsed %d,%d chunks." % (len(X_train),len(y_train)))
 
