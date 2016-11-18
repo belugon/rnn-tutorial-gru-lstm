@@ -1,9 +1,7 @@
 # /usr/bin/env python
 
-import csv
 import itertools
 import numpy as np
-import nltk
 import time
 import sys
 import operator
@@ -12,7 +10,7 @@ import array
 from datetime import datetime
 from lstm_theano import LSTMTheano
 
-CHUNK_SIZE = 128
+CHUNK_SIZE = 64
 
 def load_data(filename="data/reddit-comments-2015-08.csv", vocabulary_size=2000, min_sent_characters=2):
 
@@ -20,20 +18,12 @@ def load_data(filename="data/reddit-comments-2015-08.csv", vocabulary_size=2000,
     # Read the data
     print("Reading file...")
     with open(filename, 'rt') as f:
-        reader = csv.reader(f, skipinitialspace=True)
-        next(reader)
-        # Split full comments into sentences
-        sentences = itertools.chain(*[nltk.sent_tokenize(x[0]) for x in reader])
+        ascii_buf = f.read().encode('ascii', 'ignore')
         # Filter sentences
-        sentences = [s for s in sentences if len(s) >= min_sent_characters]
-        sentences = [s.encode('ascii', 'ignore') for s in sentences if "http" not in s]
-        chunks = [[c for c in sentence] for sentence in sentences]
+        X_train = [ascii_buf[i:i+CHUNK_SIZE] for i in range(0, len(ascii_buf)-1, CHUNK_SIZE)]
+        y_train = [ascii_buf[i:i+CHUNK_SIZE] for i in range(1, len(ascii_buf), CHUNK_SIZE)]
 
-    print("Parsed %d sentence." % (len(chunks)))
-
-    # Create the training data
-    X_train = np.asarray([np.asarray(chunk[:-1], dtype=np.int8) for chunk in chunks])
-    y_train = np.asarray([np.asarray(chunk[1:], dtype=np.int8) for chunk in chunks])
+    print("Parsed %d,%d chunks." % (len(X_train),len(y_train)))
 
     return X_train, y_train
 
